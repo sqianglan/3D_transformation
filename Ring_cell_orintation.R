@@ -127,8 +127,7 @@ rotated_AP <- rotated_thea
 
 library(spdep)
 
-#caculate the rotation angle. angle from [0,pi] and [pi, 2*pi] would be different formular
-###rotation_angel <- ifelse(temp2[1,'New_Start_Y']<0, 1.5*pi+thea, 1.5*pi-thea)
+
 
 
   
@@ -165,8 +164,8 @@ rotated_df <- cbind(rotation_df[,c(1,2)], rotated_df)
 
 #write.csv(rotated_df, "Final_rotated_moved_coord.csv" )
 
-p <- ggplot(rotated_df)+theme_gray()
-p+geom_segment(aes(x = Rotated_Moved_Nuclei_X,y = Rotated_Moved_Nuclei_Y,xend = Rotated_Moved_GM130_X ,yend = Rotated_Moved_GM130_Y,color=sample),arrow=arrow(length = unit(0.02, "npc")))+
+p <- ggplot(rotated_df)+theme_gray()+
+  geom_segment(aes(x = Rotated_Moved_Nuclei_X,y = Rotated_Moved_Nuclei_Y,xend = Rotated_Moved_GM130_X ,yend = Rotated_Moved_GM130_Y,color=sample),arrow=arrow(length = unit(0.02, "npc")))+
   coord_equal(ratio=1)+ #make sure the x, y axis scale the same
   #scale_x_continuous(name='',breaks = seq(-50,50,by =20))+ # modify the x axis breaks and range
   #scale_y_continuous(name='',breaks=seq(-100, 150, by =20))+
@@ -175,6 +174,7 @@ p+geom_segment(aes(x = Rotated_Moved_Nuclei_X,y = Rotated_Moved_Nuclei_Y,xend = 
   #facet_wrap(~sample, nrow=2)
   xlab('')+
   ylab('')+
+  #theme(legend.position="bottom", legend.box = "horizontal")+
   ggtitle('Ring Cell Oritation')+
   geom_segment(x=40, y=75, xend=80, yend=75,color='grey34',size=0.5, arrow=arrow(length = unit(0.02, "npc")))+
   geom_segment(x=60, y=60, xend=60, yend=90,color='grey34',size=0.5, arrow=arrow(length = unit(0.02, "npc")))+
@@ -183,7 +183,7 @@ p+geom_segment(aes(x = Rotated_Moved_Nuclei_X,y = Rotated_Moved_Nuclei_Y,xend = 
   annotate('text', x=60, y=55, label='V')+
   annotate('text', x=60, y=95, label='D')
 
-  
+  p
 
 
 # q <- ggplot(coord_df)+theme_gray()
@@ -200,11 +200,39 @@ p+geom_segment(aes(x = Rotated_Moved_Nuclei_X,y = Rotated_Moved_Nuclei_Y,xend = 
 
 moving_angle <- rotated_df %>% mutate(dot= Rotated_Moved_Nuclei_X*Rotated_Moved_GM130_X+Rotated_Moved_GM130_Y*Rotated_Moved_Nuclei_Y) %>% 
   mutate(det=Rotated_Moved_Nuclei_X*Rotated_Moved_GM130_Y-Rotated_Moved_Nuclei_Y*Rotated_Moved_GM130_X) %>% 
-  mutate(angle=atan2(det,dot))
+  mutate(angle=atan2(det,dot)) %>% mutate(Direction = ifelse(angle<=0, "clockwise", 'counterclockwise')) %>%  
+  group_by(sample, Direction) %>% summarise(Count=n())
+#If the orientation of the coordinate system is mathematical with y up, you get counter-clockwise angles as is the convention in mathematics. 
 
+t_test <- t.test(data=moving_angle, Count~Direction)
 #cacultet the clockwise angel based on the matrxi caculateion. (Detail not sure)
   
- 
+bar_angle <- ggplot(moving_angle)+
+  theme_gray()+
+  xlab('')+
+  geom_bar(aes (x=Direction, y=Count, fill=Direction),stat = "summary", fun.y = "mean", show.legend = F)+
+  annotate('text', x =1.5,y=9, label=paste0('p.value = ',round(t_test$p.value, 4)))+
+  theme(axis.text.x = element_text(angle = 45,hjust=1))
+  #theme(legend.position="bottom", legend.box = "horizontal")
+bar_angle
+
+bar_sample <- ggplot(moving_angle)+
+  theme_gray()+
+  xlab('')+
+  geom_bar(aes (x=sample, y=Count, fill=Direction), stat = "identity", position="dodge")+
+  theme(axis.text.x = element_text(angle = 45,hjust=1))
+  #theme(legend.position="bottom", legend.box = "horizontal")
+
+bar_sample
+
+
+#
+library(ggpubr)
+ggarrange(p,ggarrange(bar_angle, bar_sample, labels = c('B','C'), ncol = 2, widths = c(1,2)), labels = c('A'), heights = c(1.7,1),ncol = 1, nrow =2)
+
+
+
+
 
 
 
