@@ -186,14 +186,28 @@ p <- ggplot(rotated_df)+theme_gray()+
   p
 
 
-# q <- ggplot(coord_df)+theme_gray()
-# q+geom_segment(aes(x = Moved_Nuclei_X,y = Moved_Nuclei_Y,xend = Moved_GM130_X ,yend = Moved_GM130_Y,color=sample),arrow=arrow(length = unit(0.02, "npc")))+
-#   coord_equal(ratio=1)+ #make sure the x, y axis scale the same
-#   #scale_x_continuous(name='',breaks = seq(-50,50,by =20))+ # modify the x axis breaks and range
-#   #scale_y_continuous(name='',breaks=seq(-100, 150, by =20))+
-#   #change the color
-#   #scale_color_manual(name='Tip Types',values = c('Parent tip'='green', 'Right tip'='black', 'Left tip'='blue', 'Cleft'='red'))#+
-#   facet_wrap(~sample, nrow=2)
+q <- ggplot(rotated_df)+theme_gray()+
+  geom_segment(aes(x = Rotated_Moved_Nuclei_X,y = Rotated_Moved_Nuclei_Y,xend = Rotated_Moved_GM130_X ,
+                   yend = Rotated_Moved_GM130_Y,color=sample),arrow=arrow(length = unit(0.02, "npc")),
+               show.legend = F)+
+  coord_equal(ratio=1)+ #make sure the x, y axis scale the same
+  #scale_x_continuous(name='',breaks = seq(-50,50,by =20))+ # modify the x axis breaks and range
+  #scale_y_continuous(name='',breaks=seq(-100, 150, by =20))+
+  #change the color
+  #scale_color_manual(name='Tip Types',values = c('Parent tip'='green', 'Right tip'='black', 'Left tip'='blue', 'Cleft'='red'))#+
+  #facet_wrap(~sample, nrow=2)
+  xlab('')+
+  ylab('')+
+  #theme(legend.position="bottom", legend.box = "horizontal")+
+  #ggtitle('Ring Cell Oritation')+
+  geom_segment(x=40, y=75, xend=80, yend=75,color='grey34',size=0.5, arrow=arrow(length = unit(0.02, "npc")))+
+  geom_segment(x=60, y=60, xend=60, yend=90,color='grey34',size=0.5, arrow=arrow(length = unit(0.02, "npc")))+
+  annotate('text', x=85, y=75, label='A')+
+  annotate('text', x=35, y=75, label='P')+
+  annotate('text', x=60, y=55, label='V')+
+  annotate('text', x=60, y=95, label='D')+
+  facet_grid(~sample)
+q
 
 
 ## Caculta the angel of Nuclei to GM130
@@ -220,22 +234,36 @@ bar_sample <- ggplot(moving_angle)+
   theme_gray()+
   xlab('')+
   geom_bar(aes (x=sample, y=Count, fill=Direction), stat = "identity", position="dodge")+
-  theme(axis.text.x = element_text(angle = 45,hjust=1))
-  #theme(legend.position="bottom", legend.box = "horizontal")
+  #theme(axis.text.x = element_text(hjust=1))+
+  theme(legend.position="bottom", legend.box = "horizontal", legend.title = element_text(size = 10),
+        legend.text = element_text( size = 8), 
+        legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
+        legend.box.spacing=unit(-0.5, 'cm'))
 
 bar_sample
 
 
 #
 library(ggpubr)
-ggarrange(p,ggarrange(bar_angle, bar_sample, labels = c('B','C'), ncol = 2, widths = c(1,2)), labels = c('A'), heights = c(1.7,1),ncol = 1, nrow =2)
+ggarrange(ggarrange(p,bar_angle, labels = c('A','B'), ncol=2),
+          ggarrange(q, bar_sample, labels = c('C','D'), nrow  = 2), 
+          nrow =2,
+          common.legend = TRUE, legend="bottom")
 
 
 
 
+mixed_sample_plot <- ggarrange(p,bar_angle, labels = c('A','B'), ncol=2, widths = c(3,1), heights = c(4,1))
+mixed_sample_plot
+each_sample_plot <- ggarrange(q, bar_sample, labels = c('C','D'), nrow  = 2, heights = c(1,1.2), widths = c(1.5,1))
+each_sample_plot
+ggarrange(mixed_sample_plot,each_sample_plot, ncol = 1, nrow = 2, heights = c(1.5,1))
 
+library(gridExtra)
+grid.arrange(grobs=list(mixed_sample_plot, each_sample_plot))
 
-
-
-
-
+# grid.arrange(grobs=list(p,bar_angle,q, bar_sample),
+#              widths=c(2,1),
+#              layout_matrix=rbind(c(1,2),
+#                                  c(3,3),
+#                                  c(4,4)))
